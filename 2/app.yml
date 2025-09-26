@@ -1,0 +1,11 @@
+runtime: python39
+
+instance_class: F1
+
+env_variables:
+  FLASK_ENV: production
+
+handlers:
+  # This handler routes all requests not matching other handlers to Flask.
+  - url: /.*
+    script: auto
