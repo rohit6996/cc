@@ -76,4 +76,4 @@ def search_items():
 
 if __name__ == '__main__':
     # Bind to all IPs and run on port 80 for AWS access
-    app.run(host='0.0.0.0', port=80, debug=False)
+    app.run(host='0.0.0.0', port=8080, debug=False)
