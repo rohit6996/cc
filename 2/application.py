@@ -3,11 +3,13 @@ from datetime import datetime
 import json
 import os
 
-app = Flask(__name__)
+# EB expects the Flask app variable to be named 'application'
+application = Flask(__name__)
 
 # File to store items
 DATA_FILE = 'items.json'
 
+# Utility functions to load/save items
 def load_items():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'r') as f:
@@ -18,16 +20,19 @@ def save_items(items):
     with open(DATA_FILE, 'w') as f:
         json.dump(items, f, indent=2)
 
-@app.route('/')
+# Home route
+@application.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/api/items', methods=['GET'])
+# API to get all items
+@application.route('/api/items', methods=['GET'])
 def get_items():
     items = load_items()
     return jsonify(items)
 
-@app.route('/api/items', methods=['POST'])
+# API to add a new item
+@application.route('/api/items', methods=['POST'])
 def add_item():
     items = load_items()
     
@@ -39,7 +44,7 @@ def add_item():
         'location': request.json.get('location'),
         'date': datetime.now().strftime('%Y-%m-%d'),
         'contact': request.json.get('contact'),
-        'status': request.json.get('type')
+        'status': request.json.get('status', 'Pending')
     }
     
     items.append(new_item)
@@ -47,7 +52,8 @@ def add_item():
     
     return jsonify(new_item), 201
 
-@app.route('/api/items/<int:item_id>', methods=['PUT'])
+# API to update item status
+@application.route('/api/items/<int:item_id>', methods=['PUT'])
 def update_item(item_id):
     items = load_items()
     
@@ -59,21 +65,22 @@ def update_item(item_id):
     
     return jsonify({'error': 'Item not found'}), 404
 
-@app.route('/api/items/search')
+# API to search items
+@application.route('/api/items/search')
 def search_items():
     query = request.args.get('q', '').lower()
     items = load_items()
     
     if query:
         filtered_items = [item for item in items 
-                         if query in item['name'].lower() 
-                         or query in item['description'].lower()
-                         or query in item['location'].lower()]
+                          if query in item['name'].lower() 
+                          or query in item['description'].lower()
+                          or query in item['location'].lower()]
     else:
         filtered_items = items
     
     return jsonify(filtered_items)
 
+# Run the app on port 8080 for EB
 if __name__ == '__main__':
-    # Bind to all IPs and run on port 80 for AWS access
-    app.run(host='0.0.0.0', port=8080, debug=False)
+    application.run(host='0.0.0.0', port=8080, debug=False)
